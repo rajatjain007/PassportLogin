@@ -1,69 +1,74 @@
-if(process.env.NODE_ENV !== 'production'){
-    require('dotenv').config()
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
 }
 
-const { urlencoded } = require('express')
-const express = require('express')
-const app = express()
-const bcrypt = require("bcrypt")
-const passport = require("passport")
-const initializePassport = require("./passport-config")
-const flash = require("express-flash")
-const session = require("express-session")
-const users = []
+const { urlencoded } = require("express");
+const express = require("express");
+const app = express();
+const bcrypt = require("bcrypt");
+const passport = require("passport");
+const initializePassport = require("./passport-config");
+const flash = require("express-flash");
+const session = require("express-session");
+const jsonParser = require("body-parser").json();
+const users = [];
 initializePassport(
-    passport,
-    email=> {return users.find(user=>user.email===email)},
-    id => users.find(user=>user.id===id)
-)
+  passport,
+  (email) => {
+    return users.find((user) => user.email === email);
+  },
+  (id) => users.find((user) => user.id === id)
+);
 
-
-app.set("view-engine",'ejs')
-app.use(urlencoded({extended:false}))
-app.use(flash())
-app.use(session({
+app.set("view-engine", "ejs");
+app.use(urlencoded({ extended: false }));
+app.use(flash());
+app.use(
+  session({
     secret: process.env.SESSION_SECRET,
-    resave:false,
-    saveUninitialized:false
-}))
-app.use(passport.initialize())
-app.use(passport.session())
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
-app.get('/',(req,res)=>{
-    console.log("Server up and running");
-    res.render('index.ejs')
-})
+app.get("/", (req, res) => {
+  console.log("Server up and running");
+  res.render("index.ejs");
+});
 
-app.get('/login',(req,res)=>{
-    res.render('login.ejs')
-})
+app.get("/login", (req, res) => {
+  res.render("login.ejs");
+});
 
-app.get('/register',(req,res)=>{
-    res.render('register.ejs')
-})
+app.get("/register", (req, res) => {
+  res.render("register.ejs");
+});
 
-app.post('/register',async(req,res)=>{
-    try{
-        const hashedPassword = await bcrypt.hash(req.body.password,10)
-        users.push({
-            id:Date.now().toString(),
-            name:req.body.name,
-            email:req.body.email,
-            password:hashedPassword
-        })
-        res.redirect('/login')
-    }
-    catch{
-        res.redirect('/register')
-    }
-    console.log(users)  
-})
+app.post("/register", async (req, res) => {
+  try {
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    users.push({
+      id: Date.now().toString(),
+      name: req.body.name,
+      email: req.body.email,
+      password: hashedPassword,
+    });
+    res.redirect("/login");
+  } catch {
+    res.redirect("/register");
+  }
+  console.log(users);
+});
 
-app.post('/login',passport.authenticate('local',{
-    successRedirect:"/",
-    failureRedirect:"/login",
-    failureFlash:true
-}))
+app.post(
+  "/login",
+  passport.authenticate("local", {
+    successRedirect: "/",
+    failureRedirect: "/login",
+    failureFlash: true,
+  })
+);
 
-
-app.listen(3000)
+app.listen(3000);
